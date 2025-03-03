@@ -5,6 +5,7 @@
 
 # Binary
 main
+/main.go
 
 # Vendor
 vendor/
