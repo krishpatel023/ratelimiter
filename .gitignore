@@ -1,0 +1,16 @@
+/ratelimiter.exe
+
+# env
+.env
+
+# Binary
+main
+
+# Vendor
+vendor/
+
+# Go
+.go/
+
+# Logs
+logs/
