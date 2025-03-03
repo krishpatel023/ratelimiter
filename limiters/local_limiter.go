@@ -17,6 +17,7 @@ type LocalRateLimiterConfig struct {
 	ExpirationTime  time.Duration // Cleanup interval and expiration time for the cache
 }
 
+// GetLocalRateLimiterDefaultConfig returns the default configuration for the local rate limiter
 func GetLocalRateLimiterDefaultConfig() LocalRateLimiterConfig {
 	return LocalRateLimiterConfig{
 		Capacity:   20,
