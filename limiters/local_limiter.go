@@ -9,24 +9,25 @@ import (
 
 // RateLimiterConfig holds configuration for both implementations
 type LocalRateLimiterConfig struct {
-	Capacity        int           // Total number of tokens in the bucket
-	RefillRate      int           // Number of tokens to add per second
-	TargetURL       string        // Target URL for reverse proxy - to be used in the middleware
-	MaxEntries      int           // Maximum number of entries in the cache
-	CleanupInterval time.Duration // Cleanup interval for the cache,
-	ExpirationTime  time.Duration // Cleanup interval and expiration time for the cache
+	Capacity                  int           // Total number of tokens in the bucket
+	RefillRate                int           // Number of tokens to add per second
+	TargetURL                 string        // Target URL for reverse proxy - to be used in the middleware
+	UniqueHeaderNameInRequest string        // Unique header name in the request
+	MaxEntries                int           // Maximum number of entries in the cache
+	CleanupInterval           time.Duration // Cleanup interval for the cache,
+	ExpirationTime            time.Duration // Cleanup interval and expiration time for the cache
 }
 
 // GetLocalRateLimiterDefaultConfig returns the default configuration for the local rate limiter
 func GetLocalRateLimiterDefaultConfig() LocalRateLimiterConfig {
 	return LocalRateLimiterConfig{
-		Capacity:   20,
-		RefillRate: 1,
-		TargetURL:  "",
-
-		MaxEntries:      1000,
-		CleanupInterval: 1 * time.Minute,
-		ExpirationTime:  5 * time.Minute,
+		Capacity:                  20,
+		RefillRate:                1,
+		TargetURL:                 "",
+		UniqueHeaderNameInRequest: "",
+		MaxEntries:                1000,
+		CleanupInterval:           1 * time.Minute,
+		ExpirationTime:            5 * time.Minute,
 	}
 }
 
