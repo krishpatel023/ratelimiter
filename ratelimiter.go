@@ -20,3 +20,17 @@ var Local = LocalWrapper{
 	Stop:       limiters.StopLocalRateLimiter,
 	Middleware: limiters.LocalRateLimitingMiddleware,
 }
+
+type DistributedWrapper struct {
+	Config     limiters.DistributedRateLimiterConfig
+	New        func(config limiters.DistributedRateLimiterConfig) (*rate_limiter.DistributedRateLimiter, error)
+	Stop       func(rl *rate_limiter.DistributedRateLimiter)
+	Middleware func(rl *rate_limiter.DistributedRateLimiter, config limiters.DistributedRateLimiterConfig) http.Handler
+}
+
+var Distributed = DistributedWrapper{
+	Config:     limiters.GetDistributedRateLimiterDefaultConfig(),
+	New:        limiters.CreateDistributedRateLimiter,
+	Stop:       limiters.StopDistributedRateLimiter,
+	Middleware: limiters.DistributedRateLimitingMiddleware,
+}
