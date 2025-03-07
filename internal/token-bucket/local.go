@@ -27,14 +27,12 @@ func (tb *TokenBucket) refill() {
 	defer tb.mu.Unlock()
 
 	now := time.Now()
-	elapsed := now.Sub(tb.lastRefillTime).Seconds()
+	elapsed := int(now.Sub(tb.lastRefillTime).Seconds()) // Convert to whole seconds
 
-	// Tokens according to the elapsed time
-	tokenCount := tb.currentFill + int(elapsed*float64(tb.refillRate))
-
-	// If the token count is greater than the capacity, set it to the capacity
-	tb.currentFill = min(tb.capacity, tokenCount)
-	tb.lastRefillTime = now
+	if elapsed > 0 {
+		tb.currentFill = min(tb.capacity, tb.currentFill+elapsed*tb.refillRate)
+		tb.lastRefillTime = now // Update last refill time only when tokens are added
+	}
 }
 
 // It will check if the token is available or not
