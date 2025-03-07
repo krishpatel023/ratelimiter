@@ -21,15 +21,21 @@ func LocalRateLimitingMiddleware(rl *rate_limiter.LocalRateLimiter, config Local
 		return nil
 	}
 
+	// Check unique header name in request
+	if config.UniqueHeaderNameInRequest == "" {
+		helper.Log("Request rejected: Set UniqueHeaderNameInRequest header in config", "warning")
+		return nil
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the X-ID header is present
 		// RequestID is used to identify the request group - all requests with the same X-ID header
 		// are considered as a single group of requests and are rate limited together
-		requestID := r.Header.Get("X-ID")
+		requestID := r.Header.Get(config.UniqueHeaderNameInRequest)
 		if requestID == "" {
-			http.Error(w, "Missing X-ID header", http.StatusBadRequest)
-			helper.Log("Request rejected: Missing X-ID header", "warning")
+			http.Error(w, "Missing UniqueHeaderNameInRequest header", http.StatusBadRequest)
+			helper.Log("Request rejected: Missing UniqueHeaderNameInRequest header", "warning")
 			return
 		}
 
