@@ -13,34 +13,35 @@ import (
 )
 
 const (
-	url         = "http://localhost:8080/"
-	numReqs     = 30
-	concurrency = 1
-	totalUsers  = 2
+	basicUrl         = "http://localhost:8080/"
+	basicNumReqs     = 5000
+	basicConcurrency = 5
+	basicTotalUsers  = 10
+	basicHeaderName  = "X-ID"
 )
 
-func TestBenchmark(t *testing.T) {
+func TestBasicBenchmark(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	RunBenchmark(
-		url,
-		numReqs,
-		concurrency,
-		totalUsers,
+		basicUrl,
+		basicNumReqs,
+		basicConcurrency,
+		basicTotalUsers,
 	)
 }
 
-func pickUser(limit int, prefix string) string {
+func pickUserBasic(limit int, prefix string) string {
 	pickedNumber := rand.Intn(limit) + 1 // Random number between 1 and limit
 	return fmt.Sprintf("%s-%d", prefix, pickedNumber)
 }
 
-func sendRequest(client *http.Client, userID string, url string) (int, bool) {
+func sendRequestBasic(client *http.Client, userID string, url string) (int, bool) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("Request creation failed:", err)
 		return 404, false
 	}
-	req.Header.Set("X-ID", userID)
+	req.Header.Set(basicHeaderName, userID)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -52,7 +53,7 @@ func sendRequest(client *http.Client, userID string, url string) (int, bool) {
 	return resp.StatusCode, true
 }
 
-func PrintStats(successfulReqs, failedReqs, bouncedReqs, totalReqs int32) {
+func PrintStatsBasic(successfulReqs, failedReqs, bouncedReqs, totalReqs int32) {
 	// Create a new tabwriter that writes to stdout
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
@@ -73,7 +74,7 @@ func PrintStats(successfulReqs, failedReqs, bouncedReqs, totalReqs int32) {
 	w.Flush()
 }
 
-func RunBenchmark(url string, numReqs, concurrency, totalUsers int) {
+func RunBasicBenchmark(url string, numReqs, concurrency, totalUsers int) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, concurrency) // Limit concurrency
@@ -90,7 +91,7 @@ func RunBenchmark(url string, numReqs, concurrency, totalUsers int) {
 				wg.Done()
 			}()
 
-			resp, success := sendRequest(client, pickUser(totalUsers, "user"), url)
+			resp, success := sendRequestBasic(client, pickUserBasic(basicTotalUsers, "user"), url)
 			if success {
 				if resp == 200 {
 					atomic.AddInt32(&successfulReqs, 1)
@@ -108,5 +109,5 @@ func RunBenchmark(url string, numReqs, concurrency, totalUsers int) {
 
 	wg.Wait()
 
-	PrintStats(successfulReqs, failedReqs, bouncedReqs, totalReqs)
+	PrintStatsBasic(successfulReqs, failedReqs, bouncedReqs, totalReqs)
 }
