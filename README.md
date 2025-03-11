@@ -61,7 +61,7 @@ func main() {
 	// Header Name that will have an identification variable
 	// Example:  userID
 	// Thus, all the request from the same userID will be batched together and ratelimited accordingly
-	config.UniqueHeaderNameInRequest = "X-USER-ID"
+	config.UniqueHeaderNameInRequest = "X-ID"
 
 	// Create New Ratelimiter
 	rl, err := ratelimiter.Local.New(config)
@@ -144,66 +144,16 @@ func main() {
 	KeyPrefix                 string        // Redis key prefix - used for multiple instances
 ```
 
-## Benchmarks
+---
 
-### Local
-
-#### Wkr Benchmark
-
-run a benchmark
-```bash
-make wkr-test
-```
-
-config used
-```bash
-duration: 1m
-threads : 4
-connections  : 100
-bucket-capacity : 30
-bucket-refill-rate : 1
-unique-request-senders : 1000
-```
-
-results
-```bash
-Running 1m test @ http://host.docker.internal:8080/
-  4 threads and 100 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    34.78ms   21.08ms 356.21ms   71.89%
-    Req/Sec   748.32    133.84     1.22k    73.29%
-  178706 requests in 1.00m, 23.32MB read
-  Socket errors: connect 0, read 0, write 0, timeout 1
-  Non-2xx or 3xx responses: 102292
-Requests/sec:   2973.80
-Transfer/sec:    397.34KB
-```
-
-analysis
-```bash
-latency:  34.78ms
-total-req: 178706
-accepted-req:  76436 (Recorded on recieving server)
-rejected-req:  102292
-acceptance %:  76436/178706 = 42%
-req/sec : 2973.80
-req/user per sec: 2.9
-req/user in a min: 174
-allowed-req/user in a min: 30 + 1/s refill (max refill : 3 req/s which takes 10 secs to finish the capacity ~ 50) -= 80 (max)
-theoritical-acceptance-rate: 80/174 = 45.9
-
-```
-
-## Benchmarks
-
-### Local Performance Testing - `wrk Benchmark`
+## Benchmarks - `wrk Benchmark`
 
 To run a benchmark test, use the following command:  
 ```bash
 make wkr-test
 ```
 
-##### **Configuration Used**
+Configuration Used
 ```bash
 duration: 1m
 threads: 4
@@ -213,7 +163,8 @@ bucket-refill-rate: 1
 unique-request-senders: 1000
 ```
 
-##### **Results**
+### Local Ratelimiter with ReverseProxy/HTTP Forwarding
+
 ```bash
 Running 1m test @ http://host.docker.internal:8080/
   4 threads and 100 connections
@@ -227,7 +178,7 @@ Requests/sec:   2,973.80
 Transfer/sec:   397.34KB
 ```
 
-##### **Analysis**
+Analysis
 - Latency: 34.78ms (avg)  
 - Total Requests: 178,706  
 - Accepted Requests: 76,436 (recorded at receiving server)  
@@ -242,3 +193,100 @@ Transfer/sec:   397.34KB
   - Time to Deplete Bucket: ~10 sec (total capacity ~50)  
   - Max Theoretical Requests: 80  
 - **Theoretical Acceptance Rate: 45.9% (80 / 174)**
+
+
+### Local Ratelimiter without ReverseProxy/HTTP Forwarding - For Testing Only
+
+```bash
+Running 1m test @ http://host.docker.internal:8080/
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    19.96ms   15.69ms 254.76ms   72.82%
+    Req/Sec     1.10k   247.35     2.60k    73.68%
+  262310 requests in 1.00m, 37.68MB read
+  Socket errors: connect 0, read 0, write 0, timeout 78
+  Non-2xx or 3xx responses: 183665
+Requests/sec:   4367.08
+Transfer/sec:    642.35KB
+```
+
+Analysis
+
+- Latency: 19.96ms (avg)
+- Total Requests: 262,310
+- Accepted Requests: 78,645 (recorded at receiving server)
+- Rejected Requests: 183,665
+- Acceptance Rate: 30% (78,645 / 262,310)
+- Requests Per Second: 4,367.08
+- Requests Per User Per Second: 4.37
+- Requests Per User Per Minute: 262
+- Allowed Requests Per User Per Minute:
+  - Base: 30
+  - Refill Rate: 1/sec (max refill: 3 req/sec)
+  - Time to Deplete Bucket: ~10 sec (total capacity ~50)
+  - Max Theoretical Requests: 80
+- Theoretical Acceptance Rate: 30.5% (80 / 262)
+
+
+### Distributed Ratelimiter with Reverse Proxy/HTTP Forwarding
+
+```bash
+Running 1m test @ http://host.docker.internal:8080/
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    68.79ms   37.88ms 751.98ms   79.04%
+    Req/Sec   375.58    133.75   760.00     64.89%
+  89778 requests in 1.00m, 7.68MB read
+  Non-2xx or 3xx responses: 12201
+Requests/sec:   1493.94
+Transfer/sec:    130.83KB
+```
+
+Analysis
+
+- Latency: 68.79ms (avg)
+- Total Requests: 89,778
+- Accepted Requests: 77,577 (recorded at receiving server)
+- Rejected Requests: 12,201
+- **Acceptance Rate**: 86.4% (77,577 / 89,778)
+- Requests Per Second: 1,493.94
+- Requests Per User Per Second: 1.49
+- Requests Per User Per Minute: 89.6
+- Allowed Requests Per User Per Minute:
+  - Base: 30
+  - Refill Rate: 1/sec (max refill: 3 req/sec)
+  - Time to Deplete Bucket: ~10 sec (total capacity ~50)
+  - Max Theoretical Requests: 80
+- **Theoretical Acceptance Rate**: 89.3% (80 / 89.6)
+
+
+### Distributed Ratelimiter without Reverse Proxy/HTTP Forwarding - For Testing Only
+
+```bash
+Running 1m test @ http://host.docker.internal:8080/
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    32.68ms   16.13ms 371.98ms   83.80%
+    Req/Sec   779.38    169.33     1.22k    69.70%
+  186255 requests in 1.00m, 23.54MB read
+  Non-2xx or 3xx responses: 99224
+Requests/sec:   3100.83
+Transfer/sec:    401.34KB
+```
+
+#### Analysis
+
+- Latency: 32.68ms (avg)
+- Total Requests: 186,255
+- Accepted Requests: 87,031 (recorded at receiving server)
+- Rejected Requests: 99,224
+- **Acceptance Rate**: 46.7% (87,031 / 186,255)
+- Requests Per Second: 3,100.83
+- Requests Per User Per Second: 3.1
+- Requests Per User Per Minute: 186
+- Allowed Requests Per User Per Minute:
+  - Base: 30
+  - Refill Rate: 1/sec (max refill: 3 req/sec)
+  - Time to Deplete Bucket: ~10 sec (total capacity ~50)
+  - Max Theoretical Requests: 80
+- **Theoretical Acceptance Rate**: 43% (80 / 186)
