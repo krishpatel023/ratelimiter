@@ -8,10 +8,8 @@ import (
 )
 
 // Local Rate Limiter Middleware
-// It will handle the reverse proxy and the verification of the X-ID Header and also will check
-// the allowed requests. Based on the response will either decline or forward the request.
-// It is also responsible for the reverse proxy setup and the forwarding of the request if the
-// request is allowed
+// It will handle the verification of the UniqueHeaderNameInRequest Header and also will check
+// the allowed requests. Based on the response will either decline or accept the request.
 
 func LocalNonProxyRateLimitingMiddleware(rl *rate_limiter.LocalRateLimiter, config LocalRateLimiterConfig) http.Handler {
 
@@ -53,10 +51,9 @@ func LocalNonProxyRateLimitingMiddleware(rl *rate_limiter.LocalRateLimiter, conf
 }
 
 // Distributed Rate Limiter Middleware
-// It will handle the reverse proxy and the verification of the UniqueHeaderNameInRequest Header and also will check
-// the allowed requests. Based on the response will either decline or forward the request.
-// It is also responsible for the reverse proxy setup and the forwarding of the request if the
-// request is allowed
+// It will handle the verification of the UniqueHeaderNameInRequest Header and also will check
+// the allowed requests. Based on the response will either decline or accept the request.
+
 func DistributedNonProxyRateLimitingMiddleware(rl *rate_limiter.DistributedRateLimiter, config DistributedRateLimiterConfig) http.Handler {
 	// Check if the UniqueHeaderNameInRequest header is present
 	if config.UniqueHeaderNameInRequest == "" {
