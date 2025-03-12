@@ -150,7 +150,7 @@ func main() {
 
 To run a benchmark test, use the following command:  
 ```bash
-make wkr-test
+make wrk-test
 ```
 
 Configuration Used

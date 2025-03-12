@@ -16,14 +16,14 @@ benchmark:
 	@echo "Benchmark completed"
 
 
-.PHONY: wkr-test wkr-build wkr-run
-wkr-test:
+.PHONY: wrk-test wrk-build wrk-run
+wrk-test:
 	@echo "Running wrk benchmark"
-	make wkr-build
-	make wkr-run
+	make wrk-build
+	make wrk-run
 
-wkr-build:
+wrk-build:
 	cd benchmark && docker build -t wrk-benchmark .
 
-wkr-run:
+wrk-run:
 	cd benchmark && docker run --rm --add-host=host.docker.internal:host-gateway wrk-benchmark http://host.docker.internal:8080/
