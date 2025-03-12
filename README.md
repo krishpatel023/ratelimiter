@@ -53,7 +53,7 @@ func main() {
 	// Load default config
 	config := ratelimiter.Local.Config
 
-    // Configure local rate limiter
+  // Configure local rate limiter
 	config.Capacity = 100
 	config.RefillRate = 1
 	config.TargetURL = "http://localhost:8081" // URL of the server we need to forward the request to
@@ -70,7 +70,7 @@ func main() {
 	}
 	defer ratelimiter.Local.Stop(rl)
 
-    // Setup the middleware
+  // Setup the middleware
 	rateLimitedHandler := ratelimiter.Local.Middleware(rl, config)
 	if rateLimitedHandler == nil {
 		log.Println("Ratelimiter shutting down due to error")
@@ -83,10 +83,10 @@ func main() {
 ```go
 // Distributed Rate Limiter Example
 func main() {
-    // Load default config
-    config := ratelimiter.Distributed.Config
+  // Load default config
+  config := ratelimiter.Distributed.Config
     
-    // Configure distributed rate limiter
+  // Configure distributed rate limiter
 	config.Capacity = 100
 	config.RefillRate = 1
 	config.RedisDBAddress = "your-redis-server-url"
@@ -101,20 +101,20 @@ func main() {
 	config.UniqueHeaderNameInRequest = "X-ID"
 
 
-    // Create New Ratelimiter
+  // Create New Ratelimiter
 	rl, err := ratelimiter.Distributed.New(config)
 	if err != nil {
 		log.Fatalf("Failed to initialize rate limiter: %v", err)
 	}
 	defer ratelimiter.Distributed.Stop(rl)
 
-    // Setup the middleware
+  // Setup the middleware
 	rateLimitedHandler := ratelimiter.Distributed.Middleware(rl, config)
 	if rateLimitedHandler == nil {
 		log.Println("Ratelimiter shutting down due to error")
 		return
 	}
-    http.ListenAndServe(":8080", rateLimitedHandler)
+  http.ListenAndServe(":8080", rateLimitedHandler)
 }
 ```
 
@@ -140,8 +140,8 @@ func main() {
     UniqueHeaderNameInRequest string        // Header for request identification
     RedisDBAddress            string        // Redis DB Address
     RedisDBPassword          string         // Redis DB Password
-	StorageDB                 int           // Redis DB number
-	KeyPrefix                 string        // Redis key prefix - used for multiple instances
+    StorageDB                 int           // Redis DB number
+    KeyPrefix                 string        // Redis key prefix - used for multiple instances
 ```
 
 ---
@@ -290,3 +290,13 @@ Transfer/sec:    401.34KB
   - Time to Deplete Bucket: ~10 sec (total capacity ~50)
   - Max Theoretical Requests: 80
 - **Theoretical Acceptance Rate**: 43% (80 / 186)
+
+
+## Benchmark Summary 
+
+| Configuration    | Latency (ms) | Total Requests | Accepted Requests | Rejected Requests | Acceptance Rate | Requests/sec | Theoretical Acceptance Rate |
+|------------------|-------------|---------------|------------------|------------------|----------------|--------------|--------------------------|
+| **Local Ratelimiter w/ Reverse Proxy**            | 34.78       | 178,706       | 76,436           | 102,292          | 42.0%          | 2,973.80     | 45.9%                    |
+| **Local Ratelimiter w/o Reverse Proxy - For Testing Only**           | 19.96       | 262,310       | 78,645           | 183,665          | 30.0%          | 4,367.08     | 30.5%                    |
+| **Distributed Ratelimiter w/ Reverse Proxy**      | 68.79       | 89,778        | 77,577           | 12,201           | 86.4%          | 1,493.94     | 89.3%                    |
+| **Distributed Ratelimiter w/o Reverse Proxy - For Testing Only**     | 32.68       | 186,255       | 87,031           | 99,224           | 46.7%          | 3,100.83     | 43.0%                    |
